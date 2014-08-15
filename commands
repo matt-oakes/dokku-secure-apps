@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+
+# Check if name is specified
+if [[ $1 == secure:* ]]; then
+  if [[ -z $2 ]]; then
+    echo "You must specify an app name"
+    exit 1
+  else
+    APP="$2"
+    HTPASSWD_FILE="$DOKKU_ROOT/$APP/HTPASSWD"
+
+    # Check if app exists with the same name
+    if [ ! -d "$DOKKU_ROOT/$APP" ]; then
+      echo "App $APP does not exist"
+      exit 1
+    fi
+  fi
+fi
+
+case "$1" in
+
+  secure:unset)
+      if [[ -f "$HTPASSWD_FILE" ]]; then
+        NGINX_CONF="$DOKKU_ROOT/$APP/nginx.conf"
+        perl -0777 -i -pe 's/(\s|\n)*auth_basic \"Restricted\";\n\s*auth_basic_user_file $ARGV[0];//' $NGINX_CONF $HTPASSWD_FILE
+        rm $HTPASSWD_FILE
+        sudo /etc/init.d/nginx reload
+      fi
+    ;;
+
+  secure:set)
+      if [[ $# -ne 4 ]]; then
+        echo "Usage: dokku secure:set APP USERNAME PASSWORD"
+        echo "Must specify a USERNAME and PASSWORD."
+        exit 1
+      fi
+
+      if [[ ! -f "$HTPASSWD_FILE" ]]; then
+        FIRST_RUN="YES"
+      fi
+
+      htpasswd -bc $HTPASSWD_FILE $3 $4
+
+      if [[ ! -z $FIRST_RUN ]]; then
+        pluginhook nginx-pre-reload $APP
+        sudo /etc/init.d/nginx reload
+      fi
+    ;;
+
+  help)
+    cat && cat<<EOF
+    secure:unset <app>                              remove security for this app
+    secure:set <app> username password              secure this app with a userame and password
+EOF
+    ;;
+esac
