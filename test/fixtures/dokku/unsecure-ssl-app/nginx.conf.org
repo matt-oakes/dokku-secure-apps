@@ -1,0 +1,30 @@
+upstream unsecure-ssl-app { server 127.0.0.1:3456; }
+server {
+  listen      [::]:80;
+  listen      80;
+  server_name unsecure-ssl-app.example.com;
+  return 301 https://$host$request_uri;
+}
+
+server {
+  listen      [::]:443 ssl spdy;
+  listen      443 ssl spdy;
+  server_name unsecure-ssl-app.example.com;
+  ssl_certificate     /home/dokku/unsecure-ssl-app/tls/server.crt;
+  ssl_certificate_key /home/dokku/unsecure-ssl-app/tls/server.key;
+
+  keepalive_timeout   70;
+  add_header          Alternate-Protocol  443:npn-spdy/2;
+
+  location    / {
+    proxy_pass  http://secure-app;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Port $server_port;
+    proxy_set_header X-Request-Start $msec;
+  }
+}

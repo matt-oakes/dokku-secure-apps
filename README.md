@@ -1,4 +1,4 @@
-Dokku Secure App Plugin
+Dokku Secure App Plugin [![Build Status](https://travis-ci.org/matto1990/dokku-secure-apps.svg?branch=master)](https://travis-ci.org/matto1990/dokku-secure-apps)
 =======================
 
 This is a plugin for [Dokku](https://github.com/progrium/dokku) which secures an individual app with HTTP Basic authentication.
@@ -20,11 +20,22 @@ $ dokku help
     secure:unset <app>                              remove security for this app
 ```
 
+Unit Tests
+----------
+
+This plugins test were inspired by the tests in [https://github.com/neam/dokku-custom-domains](https://github.com/neam/dokku-custom-domains). It uses [assert.sh 1.0 - bash unit testing framework](http://github.com/lehmannro/assert.sh).
+
+To run the tests:
+
+```
+make test
+```
+
 TODO
 ----
 
-- Multiple login details
-- Unit tests
+- Multiple login details in a single app
+- Globally secure all apps (with opt-out for specific apps)
 
 Licence
 -------
