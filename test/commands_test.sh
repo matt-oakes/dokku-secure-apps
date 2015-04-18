@@ -199,8 +199,4 @@ assert "$dokku secure:list secure-app" "Users for app secure-app (Total: 2)\nuse
 cleanup
 
 # end of test suite
-assert_end examples
-
-cleanup
-
-exit 0
+assert_end examples || exit 1

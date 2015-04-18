@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
-source "$(dirname $0)/../common/functions"
 
 # Check if name is specified
 if [[ $1 == secure:* ]]; then
@@ -13,7 +12,7 @@ if [[ $1 == secure:* ]]; then
     readonly NGINX_CONF_D="$DOKKU_ROOT/$APP/nginx.conf.d"
     readonly NGINX_CONF="$NGINX_CONF_D/secure.conf"
 
-    verify_app_name "$APP"
+    [[ ! -d "$DOKKU_ROOT/$APP" ]] && echo "App $APP does not exist" && exit 1
   fi
 fi
 
