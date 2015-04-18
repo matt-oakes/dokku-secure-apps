@@ -1,57 +1,139 @@
 #!/usr/bin/env bash
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+source "$(dirname $0)/../common/functions"
 
 # Check if name is specified
 if [[ $1 == secure:* ]]; then
-  if [[ -z $2 ]]; then
+  if [[ -z "$2" ]]; then
     echo "You must specify an app name"
     exit 1
   else
     APP="$2"
-    HTPASSWD_FILE="$DOKKU_ROOT/$APP/HTPASSWD"
-    NGINX_CONF="$DOKKU_ROOT/$APP/nginx.conf.d/secure.conf"
+    readonly HTPASSWD_FILE="$DOKKU_ROOT/$APP/HTPASSWD"
+    readonly NGINX_CONF_D="$DOKKU_ROOT/$APP/nginx.conf.d"
+    readonly NGINX_CONF="$NGINX_CONF_D/secure.conf"
 
-    # Check if app exists with the same name
-    if [ ! -d "$DOKKU_ROOT/$APP" ]; then
-      echo "App $APP does not exist"
-      exit 1
-    fi
+    verify_app_name "$APP"
   fi
 fi
 
 case "$1" in
 
-  secure:unset)
-      if [[ -f "$HTPASSWD_FILE" ]]; then
-        rm "$NGINX_CONF"
-        rm $HTPASSWD_FILE
-        sudo /etc/init.d/nginx reload
-      fi
+  secure:delete)
+    [ $# -ne 2 ] && echo "Usage: dokku secure:delete <app>" && exit 1
+
+    if [ -f "$NGINX_CONF" ]; then
+      echo "Error: can't delete htpasswd for app $APP"
+      echo "Please run dokku secure:disable first"
+
+      exit 1
+    fi
+
+    if [ -f "$HTPASSWD_FILE" ]; then
+      rm "$HTPASSWD_FILE"
+      echo "Removed htpasswd file for app $APP"
+    else
+      echo "No htpasswd file for app $APP"
+    fi
+
+    ;;
+
+  secure:disable)
+    [ $# -ne 2 ] && echo "Usage: dokku secure:disable <app>" && exit 1
+
+    if [[ -f "$NGINX_CONF" ]]; then
+      rm "$NGINX_CONF"
+
+      sudo /etc/init.d/nginx reload
+      echo "htpasswd disabled for app $APP"
+    else
+      echo "htpasswd already disabled for app $APP"
+    fi
+    ;;
+
+  secure:enable)
+    [ $# -ne 2 ] && echo "Usage: dokku secure:enable <app>" && exit 1
+
+    if [[ ! -f "$HTPASSWD_FILE" ]]; then
+      echo "Error: no htpasswd file"
+      echo "Add users with dokku secure:add before enabling"
+      exit 1
+    fi
+
+    if [[ ! -f $NGINX_CONF ]]; then
+      [ -d "$NGINX_CONF_D" ] || mkdir "$NGINX_CONF_D"
+
+      # update app nginx.conf with the security parameters
+      echo 'auth_basic "Restricted";' > "$NGINX_CONF"
+      echo "auth_basic_user_file $HTPASSWD_FILE;" >> "$NGINX_CONF"
+
+      sudo /etc/init.d/nginx reload
+
+      echo "htpasswd enabled for app $APP"
+    else
+      echo "htpasswd already enabled for app $APP"
+    fi
     ;;
 
   secure:set)
-      if [[ $# -ne 4 ]]; then
-        echo "Usage: dokku secure:set APP USERNAME PASSWORD"
-        echo "Must specify a USERNAME and PASSWORD."
-        exit 1
-      fi
+    if [ $# -ne 4 ]; then
+      echo "Usage: dokku secure:set APP USERNAME PASSWORD"
+      echo "Must specify a USERNAME and PASSWORD."
+      exit 1
+    fi
 
-      if [[ ! -f "$HTPASSWD_FILE" ]]; then
-        FIRST_RUN="YES"
-      fi
+    if [ ! -f "$HTPASSWD_FILE" ]; then
+      touch "$HTPASSWD_FILE"
+    fi
 
-      htpasswd -bc $HTPASSWD_FILE $3 $4
+    if ! grep "^$3:" "$HTPASSWD_FILE" > /dev/null; then
+      htpasswd -b "$HTPASSWD_FILE" "$3" "$4" || exit 1
+      echo "User '$3' added for app $APP"
+    else
+      htpasswd -b "$HTPASSWD_FILE" "$3" "$4" || exit 1
+      echo "Password for user '$3' updated for app $APP"
+    fi
 
-      if [[ ! -z $FIRST_RUN ]]; then
-        pluginhook nginx-pre-reload $APP
-        sudo /etc/init.d/nginx reload
-      fi
+    ;;
+  secure:unset)
+    if [ $# -ne 3 ]; then
+      echo "Usage: dokku secure:unset APP USERNAME"
+      echo "Must specify a USERNAME."
+      exit 1
+    fi
+
+    if ! grep "^$3:" "$HTPASSWD_FILE" > /dev/null; then
+      echo "User '$3' doesn't exist for app $APP"
+      exit 1
+    fi
+
+    if [ "$(wc -l "$HTPASSWD_FILE" | cut -d' ' -f1)" -lt 2 ]; then
+      echo "Error: can't delete last user for app $APP"
+      exit 1
+    fi
+
+    htpasswd -D "$HTPASSWD_FILE" "$3" || exit 2
+    echo "User '$3' deleted for app $APP"
+    ;;
+
+  secure:list)
+    USER_COUNT="$(wc -l "$HTPASSWD_FILE" | cut -d' ' -f1)"
+
+    echo "Users for app $APP (Total: $USER_COUNT)"
+    cut -d':' -f1 "$HTPASSWD_FILE"
     ;;
 
   help)
     cat && cat<<EOF
-    secure:unset <app>                              remove security for this app
-    secure:set <app> username password              secure this app with a userame and password
+    secure:disable <app>                            remove security for this app
+    secure:enable <app>                             enable security for this app
+    secure:delete <app>                             delete htpasswd file for this app
+    secure:set <app> username password              add user to app or update their password
+    secure:unset <app> username                     remove user from app
+    secure:list <app>                               list users for app
 EOF
+    ;;
+  *)
+    exit $DOKKU_NOT_IMPLEMENTED_EXIT
     ;;
 esac
