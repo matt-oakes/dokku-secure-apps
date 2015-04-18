@@ -9,6 +9,7 @@ if [[ $1 == secure:* ]]; then
   else
     APP="$2"
     HTPASSWD_FILE="$DOKKU_ROOT/$APP/HTPASSWD"
+    NGINX_CONF="$DOKKU_ROOT/$APP/nginx.conf.d/secure.conf"
 
     # Check if app exists with the same name
     if [ ! -d "$DOKKU_ROOT/$APP" ]; then
@@ -22,8 +23,7 @@ case "$1" in
 
   secure:unset)
       if [[ -f "$HTPASSWD_FILE" ]]; then
-        NGINX_CONF="$DOKKU_ROOT/$APP/nginx.conf"
-        perl -0777 -i -pe 's/(\s|\n)*auth_basic \"Restricted\";\n\s*auth_basic_user_file $ARGV[0];//' $NGINX_CONF $HTPASSWD_FILE
+        rm "$NGINX_CONF"
         rm $HTPASSWD_FILE
         sudo /etc/init.d/nginx reload
       fi

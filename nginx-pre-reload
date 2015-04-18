@@ -2,10 +2,14 @@
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 APP="$1";
 
-HTPASSWD_FILE="$DOKKU_ROOT/$APP/HTPASSWD";
-NGINX_CONF="$DOKKU_ROOT/$APP/nginx.conf";
+readonly HTPASSWD_FILE="$DOKKU_ROOT/$APP/HTPASSWD"
+readonly NGINX_CONF_D="$DOKKU_ROOT/$APP/nginx.conf.d"
+readonly NGINX_CONF="$NGINX_CONF_D/secure.conf"
 
 if [[ -f "$HTPASSWD_FILE" ]]; then
+  [ -d "$NGINX_CONF_D" ] || mkdir "$NGINX_CONF_D"
+
   # update app nginx.conf with the security parameters
-  perl -0777 -i -pe 's/server ?\{((\s|\S)*)\}/server \{\1  auth_basic \"Restricted\";\n  auth_basic_user_file $ARGV[0];\n\}/' $NGINX_CONF $HTPASSWD_FILE
+  echo 'auth_basic "Restricted";' > "$NGINX_CONF"
+  echo "auth_basic_user_file $HTPASSWD_FILE;" >> "$NGINX_CONF"
 fi
