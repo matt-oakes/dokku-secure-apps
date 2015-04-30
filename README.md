@@ -16,8 +16,12 @@ Commands
 
 ```
 $ dokku help
-    secure:set <app> username password              secure this app with a userame and password
-    secure:unset <app>                              remove security for this app
+    secure:disable <app>                            remove security for this app
+    secure:enable <app>                             enable security for this app
+    secure:delete <app>                             delete htpasswd file for this app
+    secure:set <app> username password              add user to app or update their password
+    secure:unset <app> username                     remove user from app
+    secure:list <app>                               list users for app
 ```
 
 Unit Tests
@@ -34,7 +38,6 @@ make test
 TODO
 ----
 
-- Multiple login details in a single app
 - Globally secure all apps (with opt-out for specific apps)
 
 Licence
