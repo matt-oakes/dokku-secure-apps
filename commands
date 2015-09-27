@@ -122,16 +122,23 @@ case "$1" in
     cut -d':' -f1 "$HTPASSWD_FILE"
     ;;
 
-  help)
-    cat && cat<<EOF
-    secure:disable <app>                            remove security for this app
-    secure:enable <app>                             enable security for this app
-    secure:delete <app>                             delete htpasswd file for this app
-    secure:set <app> username password              add user to app or update their password
-    secure:unset <app> username                     remove user from app
-    secure:list <app>                               list users for app
+  help | secure:help)
+    HELP=$(cat<<EOF
+    secure:disable <app>, remove security for this app
+    secure:enable <app>, enable security for this app
+    secure:delete <app>, delete htpasswd file for this app
+    secure:set <app> username password, add user to app or update their password
+    secure:unset <app> username, remove user from app
+    secure:list <app>, list users for app
 EOF
+)
+    if [[ -n $DOKKU_API_VERSION ]]; then
+      echo "$HELP"
+    else
+      cat && echo "$HELP"
+    fi
     ;;
+
   *)
     exit $DOKKU_NOT_IMPLEMENTED_EXIT
     ;;
