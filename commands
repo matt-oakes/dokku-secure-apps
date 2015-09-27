@@ -19,16 +19,16 @@ fi
 case "$1" in
 
   secure:delete)
-    [ $# -ne 2 ] && echo "Usage: dokku secure:delete <app>" && exit 1
+    [[ $# -ne 2 ]] && echo "Usage: dokku secure:delete <app>" && exit 1
 
-    if [ -f "$NGINX_CONF" ]; then
+    if [[ -f "$NGINX_CONF" ]]; then
       echo "Error: can't delete htpasswd for app $APP"
       echo "Please run dokku secure:disable first"
 
       exit 1
     fi
 
-    if [ -f "$HTPASSWD_FILE" ]; then
+    if [[ -f "$HTPASSWD_FILE" ]]; then
       rm "$HTPASSWD_FILE"
       echo "Removed htpasswd file for app $APP"
     else
@@ -38,7 +38,7 @@ case "$1" in
     ;;
 
   secure:disable)
-    [ $# -ne 2 ] && echo "Usage: dokku secure:disable <app>" && exit 1
+    [[ $# -ne 2 ]] && echo "Usage: dokku secure:disable <app>" && exit 1
 
     if [[ -f "$NGINX_CONF" ]]; then
       rm "$NGINX_CONF"
@@ -51,7 +51,7 @@ case "$1" in
     ;;
 
   secure:enable)
-    [ $# -ne 2 ] && echo "Usage: dokku secure:enable <app>" && exit 1
+    [[ $# -ne 2 ]] && echo "Usage: dokku secure:enable <app>" && exit 1
 
     if [[ ! -f "$HTPASSWD_FILE" ]]; then
       echo "Error: no htpasswd file"
@@ -60,7 +60,7 @@ case "$1" in
     fi
 
     if [[ ! -f $NGINX_CONF ]]; then
-      [ -d "$NGINX_CONF_D" ] || mkdir "$NGINX_CONF_D"
+      [[ -d "$NGINX_CONF_D" ]] || mkdir "$NGINX_CONF_D"
 
       # update app nginx.conf with the security parameters
       echo 'auth_basic "Restricted";' > "$NGINX_CONF"
@@ -75,13 +75,13 @@ case "$1" in
     ;;
 
   secure:set)
-    if [ $# -ne 4 ]; then
+    if [[ $# -ne 4 ]]; then
       echo "Usage: dokku secure:set APP USERNAME PASSWORD"
       echo "Must specify a USERNAME and PASSWORD."
       exit 1
     fi
 
-    if [ ! -f "$HTPASSWD_FILE" ]; then
+    if [[ ! -f "$HTPASSWD_FILE" ]]; then
       touch "$HTPASSWD_FILE"
     fi
 
@@ -92,10 +92,10 @@ case "$1" in
       htpasswd -b "$HTPASSWD_FILE" "$3" "$4" || exit 1
       echo "Password for user '$3' updated for app $APP"
     fi
-
     ;;
+
   secure:unset)
-    if [ $# -ne 3 ]; then
+    if [[ $# -ne 3 ]]; then
       echo "Usage: dokku secure:unset APP USERNAME"
       echo "Must specify a USERNAME."
       exit 1
@@ -106,7 +106,7 @@ case "$1" in
       exit 1
     fi
 
-    if [ "$(wc -l "$HTPASSWD_FILE" | cut -d' ' -f1)" -lt 2 ]; then
+    if [[ "$(wc -l "$HTPASSWD_FILE" | cut -d' ' -f1)" -lt 2 ]]; then
       echo "Error: can't delete last user for app $APP"
       exit 1
     fi
