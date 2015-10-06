@@ -1,0 +1,4 @@
+[plugin]
+description = "secures an application using basic authentication"
+version = "1.0.0"
+[plugin.config]
