@@ -1,9 +1,10 @@
-sudo: required
+sudo: false
 language: bash
 env:
   - DOKKU_VERSION=master
 before_install: make setup
-install:
-  - 'sudo apt-get update -qq'
-  - 'sudo apt-get install -y bc'
+addons:
+  apt:
+    packages:
+    - bc
 script: make test
