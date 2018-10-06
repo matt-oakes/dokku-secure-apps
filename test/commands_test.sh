@@ -96,7 +96,7 @@ assert_raises "$dokku secure:enable foo" 1
 
 # `secure:enable` requires an htpasswd file
 cleanup
-assert "$dokku secure:enable unsecure-app" "Error: no htpasswd file\nAdd users with dokku secure:add before enabling"
+assert "$dokku secure:enable unsecure-app" "Error: no htpasswd file\nAdd users with dokku secure:set before enabling"
 cleanup
 assert_raises "$dokku secure:enable unsecure-app" 1
 
