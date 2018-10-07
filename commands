@@ -53,7 +53,7 @@ case "$1" in
 
     if [[ ! -f "$HTPASSWD_FILE" ]]; then
       echo "Error: no htpasswd file"
-      echo "Add users with dokku secure:add before enabling"
+      echo "Add users with dokku secure:set before enabling"
       exit 1
     fi
 
