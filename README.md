@@ -21,9 +21,9 @@ $ dokku help
     secure:disable <app>                            remove security for this app
     secure:enable <app>                             enable security for this app
     secure:delete <app>                             delete htpasswd file for this app
-    secure:set <app> username password              add user to app or update their password
-    secure:unset <app> username                     remove user from app
-    secure:list <app>                               list users for app
+    secure:set <app> username password              add user to this app or update their password
+    secure:unset <app> username                     remove user from this app
+    secure:list <app>                               list users for this app
 ```
 
 ## Unit Tests
