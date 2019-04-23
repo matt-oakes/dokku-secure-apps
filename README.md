@@ -1,4 +1,4 @@
-# Dokku Secure App Plugin [![Build Status](https://travis-ci.org/matto1990/dokku-secure-apps.svg?branch=master)](https://travis-ci.org/matto1990/dokku-secure-apps)
+# Dokku Secure App Plugin [![Build Status](https://travis-ci.org/matt-oakes/dokku-secure-apps.svg?branch=master)](https://travis-ci.org/matto1990/dokku-secure-apps)
 
 This is a plugin for [Dokku](https://github.com/progrium/dokku) which secures an individual app with HTTP Basic authentication.
 
